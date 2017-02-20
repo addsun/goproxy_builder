@@ -1,47 +1,57 @@
 
 # *************** env (start) ***************
+export GOROOT_BOOTSTRAP?=/usr/lib/go
+export GOHOSTOS:=$(shell ${GOROOT_BOOTSTRAP}/bin/go env GOHOSTOS)
+export GOHOSTARCH:=$(shell ${GOROOT_BOOTSTRAP}/bin/go env GOHOSTARCH)
+export GOOS?=${GOHOSTOS}
+export GOARCH?=${GOHOSTARCH}
+export CGO_ENABLED?=0
+
 export GOPATH:=$(PWD)/gopath/
 $(shell mkdir -p ${GOPATH}/{bin,src,pkg})
-export GOOS:=linux
-export GOARCH:=amd64
-export GOROOT_BOOTSTRAP:=/usr/lib/go
 
-$(info info: GOPATH=${GOPATH})
-$(info info: GOOS=${GOOS})
-$(info info: GOARCH=${GOARCH})
-$(info info: GOROOT_BOOTSTRAP=${GOROOT_BOOTSTRAP})
-
-
-GO_BUILDDIR:=go-${GOOS}-${GOARCH}-bootstrap
-GOPROXY_BUILDDIR:=goproxy-${GOOS}-${GOARCH}
-$(info info: GO_BUILDDIR=${GO_BUILDDIR})
-$(info info: GOPROXY_BUILDDIR=${GOPROXY_BUILDDIR})
-$(info )
+GOHOST_BUILD_DIR:=go-${GOHOSTOS}-${GOHOSTARCH}-bootstrap
+GOPROXY_BUILD_DIR:=goproxy-${GOOS}-${GOARCH}$(if $(GOARM),-$(GOARM))
 # *************** env (end) ***************
 
-.PHONY: help clean distclean
+.PHONY: go goproxy help clean distclean
 
 
 
 
 help:
-	@echo "usage:"
-	@echo "1. build: make goproxy"
-	@echo "2. update: (TODO)"
-	@echo "3. force-update: make -B goproxy"
-	@echo "4. clean: make clean"
-	@echo "5. distclean: make distclean"
-	@echo "6. help: make help"
+	@echo "usage: make [-B] [VAR=...] TARGET"
+	@echo ""
+	@echo "SUPPORT OPTIONS:"
+	@echo "   -B          force update"
+	@echo ""
+	@echo "SUPPORT VARS:"
+	@echo "   GOROOT_BOOTSTRAP=${GOROOT_BOOTSTRAP}"
+	@echo "   GOOS=${GOOS}"
+	@echo "   GOARCH=${GOARCH}"
+	@echo "   GOARM=${GOARM}"
+	@echo "   CGO_ENABLED=${CGO_ENABLED}"
+	@echo "   see also https://golang.org/doc/install/source#environment"
+	@echo ""
+	@echo "SUPPORT TARGETS: "
+	@echo "   goproxy     build goproxy."
+	@echo "   clean       clean all file."
+	@echo "   src-clean   clean dist file."
+	@echo "   dist-clean  clean source file."
+	@echo "   help        print this message and exit."
 
 
 
+go: go-${GOOS}-${GOARCH}-bootstrap 
+	@echo "log(${@}): finished."
+	@echo "log(${@}): dist dir \"$<\""
 
-go: ${GO_BUILDDIR} 
-
-${GO_BUILDDIR}: go-src
+go-%-bootstrap: go-src
 	@echo ">>>>>>>>>> log(${@}): building phuslu/go... <<<<<<<<<<"
 	${RM} -r $@
-	cd go-src/src && ./bootstrap.bash
+	cd go-src/src \
+	              && GOOS=$(word 1,$(subst -, ,$*)) GOARCH=$(word 2,$(subst -, ,$*)) \
+	                 ./bootstrap.bash
 
 go-src:
 	@echo ">>>>>>>>>> log(${@}): cloning phuslu/go... <<<<<<<<<<"
@@ -51,17 +61,17 @@ go-src:
 
 
 
-goproxy: export PATH:=$(PWD)/${GO_BUILDDIR}/bin:$(PATH)
-goproxy: export GOROOT:=$(PWD)/${GO_BUILDDIR}
-goproxy: go ${GOPROXY_BUILDDIR}
+goproxy: export PATH:=$(PWD)/${GOHOST_BUILD_DIR}/bin:$(PATH)
+goproxy: export GOROOT:=$(PWD)/${GOHOST_BUILD_DIR}
+goproxy: ${GOHOST_BUILD_DIR} ${GOPROXY_BUILD_DIR}
 	@echo ">>>>>>>>>> log(${@}): building phuslu/goproxy... <<<<<<<<<<"
-	cd ${GOPROXY_BUILDDIR} \
+	cd ${GOPROXY_BUILD_DIR} \
 	              && go get -d \
-	              && make
+	              && GOOS= GOARCH= CGO_ENABLED=0  make GOOS=${GOOS} GOARCH=${GOARCH}
 	@echo "log(${@}): finished."
-	@echo "log(${@}): dist dir \"${GOPROXY_BUILDDIR}/build/${GOOS}_${GOARCH}/dist/\""
+	@echo "log(${@}): dist dir \"${GOPROXY_BUILD_DIR}/build/${GOOS}_${GOARCH}/dist/\""
 
-${GOPROXY_BUILDDIR}: goproxy-src
+goproxy-%: goproxy-src
 	@echo ">>>>>>>>>> log(${@}): copying phuslu/goproxy... <<<<<<<<<<"
 	${RM} -r $@
 	cp -r $< $@
@@ -74,13 +84,17 @@ goproxy-src:
 
 
 
-clean:
-	@echo ">>>>>>>>>> log(${@}): cleaning... <<<<<<<<<<"
-	${RM} -r ${GO_BUILDDIR}
-	${RM} -r ${GO_BUILDDIR}.tbz
-	${RM} -r ${GOPATH}
+clean: dist-clean src-clean
 
-distclean: clean
-	@echo ">>>>>>>>>> log(${@}): distcleaning... <<<<<<<<<<"
-	${RM} -r go-src goproxy-src ${GOPROXY_BUILDDIR} 
+dist-clean:
+	@echo ">>>>>>>>>> log(${@}): cleaning dist... <<<<<<<<<<"
+	${RM} -r go-*-bootstrap
+	${RM}    go-*-bootstrap.tbz
+	${RM} -r ${GOPATH}
+	${RM} -r go-src goproxy-src goproxy-*-*
+	${RM} -r goproxy-*-*
+
+src-clean:
+	@echo ">>>>>>>>>> log(${@}): cleaning source... <<<<<<<<<<"
+	${RM} -r go-src goproxy-src
 
