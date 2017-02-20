@@ -8,7 +8,7 @@ export GOARCH?=${GOHOSTARCH}
 export CGO_ENABLED?=0
 
 export GOPATH:=$(PWD)/gopath/
-$(shell mkdir -p ${GOPATH}/{bin,src,pkg})
+$(shell mkdir -p ${GOPATH}/bin ${GOPATH}/src ${GOPATH}/pkg)
 
 GOHOST_BUILD_DIR:=go-${GOHOSTOS}-${GOHOSTARCH}-bootstrap
 GOPROXY_BUILD_DIR:=goproxy-${GOOS}-${GOARCH}$(if $(GOARM),-$(GOARM))
@@ -44,7 +44,7 @@ help:
 
 go: go-${GOOS}-${GOARCH}-bootstrap 
 	@echo "log(${@}): finished."
-	@echo "log(${@}): dist dir \"$<\""
+	@echo "********** log(${@}): dist dir \"$<\" **********"
 
 go-%-bootstrap: go-src
 	@echo ">>>>>>>>>> log(${@}): building phuslu/go... <<<<<<<<<<"
@@ -55,7 +55,7 @@ go-%-bootstrap: go-src
 
 go-src:
 	@echo ">>>>>>>>>> log(${@}): cloning phuslu/go... <<<<<<<<<<"
-	[[ -d $@/.github ]] || git clone https://github.com/phuslu/go.git $@
+	test -d $@/.github || git clone https://github.com/phuslu/go.git $@
 	cd $@ && git checkout master && git pull
 
 
@@ -69,7 +69,7 @@ goproxy: ${GOHOST_BUILD_DIR} ${GOPROXY_BUILD_DIR}
 	              && go get -d \
 	              && GOOS= GOARCH= CGO_ENABLED=0  make GOOS=${GOOS} GOARCH=${GOARCH}
 	@echo "log(${@}): finished."
-	@echo "log(${@}): dist dir \"${GOPROXY_BUILD_DIR}/build/${GOOS}_${GOARCH}/dist/\""
+	@echo "********** log(${@}): dist dir \"${GOPROXY_BUILD_DIR}/build/${GOOS}_${GOARCH}/dist/\" **********"
 
 goproxy-%: goproxy-src
 	@echo ">>>>>>>>>> log(${@}): copying phuslu/goproxy... <<<<<<<<<<"
@@ -78,7 +78,7 @@ goproxy-%: goproxy-src
 
 goproxy-src:
 	@echo ">>>>>>>>>> log(${@}): cloning phuslu/goproxy... <<<<<<<<<<"
-	[[ -d $@/.github ]] || git clone https://github.com/phuslu/goproxy.git $@
+	test -d $@/.github || git clone https://github.com/phuslu/goproxy.git $@
 	cd $@ && git checkout master && git pull
 
 
