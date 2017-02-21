@@ -72,7 +72,7 @@ goproxy: ${GOHOST_BUILD_DIR} ${GOPROXY_BUILD_DIR}
 	@echo ">>>>>>>>>> log(${@}): building phuslu/goproxy... <<<<<<<<<<"
 	cd ${GOPROXY_BUILD_DIR} \
 	              && go get -d \
-	              && GOOS= GOARCH= CGO_ENABLED=0  make GOOS=${GOOS} GOARCH=${GOARCH}
+	              && GOOS= GOARCH= make GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=${CGO_ENABLED}
 	@echo "log(${@}): finished."
 	@echo "********** log(${@}): dist dir \"${GOPROXY_BUILD_DIR}/build/${GOOS}_${GOARCH}/dist/\" **********"
 
