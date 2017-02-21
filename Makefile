@@ -23,7 +23,8 @@ help:
 	@echo "usage: make [-B] [VAR=...] TARGET"
 	@echo ""
 	@echo "SUPPORT OPTIONS:"
-	@echo "   -B          force update"
+	@echo "   -B"
+	@echo "   --always-make  force update"
 	@echo ""
 	@echo "SUPPORT VARS:"
 	@echo "   GOROOT_BOOTSTRAP=${GOROOT_BOOTSTRAP}"
@@ -34,11 +35,15 @@ help:
 	@echo "   see also https://golang.org/doc/install/source#environment"
 	@echo ""
 	@echo "SUPPORT TARGETS: "
-	@echo "   goproxy     build goproxy."
-	@echo "   clean       clean all file."
-	@echo "   src-clean   clean dist file."
-	@echo "   dist-clean  clean source file."
-	@echo "   help        print this message and exit."
+	@echo "   go             build go."
+	@echo "   goproxy        build goproxy."
+	@echo "   clean          clean all file."
+	@echo "   src-clean      clean dist file."
+	@echo "   dist-clean     clean source file."
+	@echo "   help           print this message and exit."
+	@echo ""
+	@echo "Report bugs to https://github.com/tc5832/goproxy_builder/issues."
+
 
 
 
